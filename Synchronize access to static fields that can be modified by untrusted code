@@ -1,0 +1,767 @@
+pragma solidity >=0.4.22 <0.6.0;   
+
+import "./my_tracking_contract.sol"; 
+
+  
+
+contract MyBiddingContract { 
+
+     
+
+     
+
+    // 
+
+    bool scenario_close; 
+
+     
+
+     
+
+    //contract balance 
+
+    uint public contractbalance; 
+
+     
+
+    //bidding parameters.  
+
+    address public owner; 
+
+    string public city;// 
+
+    uint public distance; //1 
+
+    uint constant  maxBidValue = 1000;  
+
+    uint public winningBid= maxBidValue; 
+
+    uint public biddingclosetime; 
+
+    uint public minumumParticipationFee = 1; //1 USD you define .it should be constant  
+
+    uint public reputationfactor; 
+
+     
+
+    //Bidding will close wit hin specified seconds after the contract is deployed 
+
+    address public winningBidder; 
+
+    address public wholeseller; 
+
+     
+
+    // Allowing withdrawals of previous bids 
+
+    mapping(address => uint) returnsPending; 
+
+    // Will be set true once the bidding is complete, preventing any further change 
+
+    bool public biddingComplete; 
+
+    bool authorized; 
+
+     
+
+    struct Carrier {                 
+
+         
+
+        bool authorized; 
+
+        bool bidded; 
+
+        uint reputationfactor;  
+
+        uint  bidamount;   
+
+        uint qualitylevel; 
+
+     
+
+    }  
+
+     
+
+     
+
+     
+
+    mapping(address => Carrier) public carriers; 
+
+     
+
+     
+
+    //adding constructor to initialize state  
+
+    constructor () public{ 
+
+         
+
+        scenario_close=false; 
+
+    } 
+
+         
+
+         
+
+    function authorize(address party, uint _reputationfactor) ownerOnly public { 
+
+        carriers[party].authorized = true; 
+
+        carriers[party].reputationfactor= _reputationfactor; 
+
+    }  
+
+     
+
+    //instansiate the tracking after completing  the  bidding; 
+
+    MyTrackingContract public  myTackingContract; 
+
+     
+
+     
+
+    // use     for  the  tracking 
+
+    uint public initialTokenSupply; 
+
+                                      
+
+    // Events to fire when change happens 
+
+    event BidValueDecreased(address bidder, uint bidAmount); 
+
+    event biddingResult(address winner, uint bidAmount); 
+
+    event Failure(string _message); 
+
+    event contractClose(string _message); 
+
+     
+
+                    
+
+    
+
+    //not   secure 
+
+    function Bidding(uint _initialTokenSupply,uint _biddingTime, address _beneficiary, string memory _city, uint _distance,address _wholeseller)  public { 
+
+         
+
+        require(scenario_close==false); 
+
+         
+
+        owner = _beneficiary; 
+
+        biddingclosetime = now + _biddingTime; 
+
+        distance = _distance; 
+
+        city = _city; 
+
+        wholeseller=_wholeseller; 
+
+        initialTokenSupply=_initialTokenSupply; 
+
+         
+
+        scenario_close=true; 
+
+    } 
+
+     
+
+    // Bidding is possible with the value sent along with this transaction 
+
+    // Bid value is  refunded if the bidding is not won 
+
+    function bid(uint qualitylevel) public payable { 
+
+        // The keyword payable is required so the function receives Ether. 
+
+         if(now>biddingclosetime || biddingComplete == true){ 
+
+        emit contractClose("Bidding is close"); 
+
+        emit biddingResult(winningBidder, winningBid); 
+
+        } 
+
+        
+
+        else{ 
+
+         
+
+        require(msg.value>minumumParticipationFee,"low fees to bid "); 
+
+        // If the bidding period is over, the call is reverted   
+
+        require(msg.value- minumumParticipationFee< winningBid,"Bid amount is greater than maximum bid value"); 
+
+         // If the bid is not less, the money is sent back. 
+
+        require(carriers[msg.sender].authorized,"Un-authorized carrier"); 
+
+         // If the carrier is not authorized, it cannot bid. 
+
+        require(carriers[msg.sender].reputationfactor>5,"Carrier does not meet reputation factor criteria "); 
+
+         
+
+         
+
+        carriers[msg.sender].bidded = true; 
+
+        if (winningBidder != address(0)) { 
+
+        returnsPending[winningBidder] += winningBid; 
+
+        } 
+
+        
+
+        
+
+       winningBidder = msg.sender; 
+
+       winningBid = msg.value-1; 
+
+       //fee  for after bidding 
+
+       contractbalance +=msg.value-winningBid; 
+
+        
+
+       emit BidValueDecreased(msg.sender, msg.value); 
+
+        
+
+        
+
+} 
+
+    } 
+
+    // To withdraw a non-winning   
+
+    function withdraw() public returns (bool) { 
+
+        require(now >= biddingclosetime,"Bidding process is still ungoing");  
+
+        require (msg.sender != winningBidder,"You have won the bid, so cannot withdraw amount now."); 
+
+        //address withdrawalaccount=msg.sender;  
+
+        //uint withdrawalAmount = returnsPending[msg.sender]; 
+
+        uint bidAmount = returnsPending[msg.sender]; 
+
+        if (bidAmount > 0) { 
+
+            returnsPending[msg.sender] = 0; 
+
+            if (!msg.sender.send(bidAmount)) { 
+
+                returnsPending[msg.sender] = bidAmount; 
+
+                return false; 
+
+            } 
+
+        } 
+
+  
+
+        return true; 
+
+    } 
+
+     
+
+     
+
+    //When bidding ends, winning bid is sent to the beneficiary 
+
+    function biddingClose() public { 
+
+         
+
+         
+
+       require (msg.sender == owner,"Not authorized to make this request"); 
+
+       // only  can end the biddind 
+
+       require(now >= biddingclosetime,"Bidding is not closed");  
+
+       // bidding should not have ended 
+
+       require(!biddingComplete,"Bidding in process");  
+
+      // If this function has already been called, it should complete 
+
+        biddingComplete = true; 
+
+         
+
+        //owner get   the totalfee  of the contract bidding; 
+
+        msg.sender.transfer(contractbalance); 
+
+         
+
+        // instance of the tracking contract; 
+
+        myTackingContract=new MyTrackingContract(initialTokenSupply,address(this)); 
+
+        emit biddingResult(winningBidder, winningBid); 
+
+        // owner.transfer(winningBid); 
+
+    }        
+
+  
+
+    function getbalance() public view  returns (uint){ 
+
+        require (msg.sender == owner); 
+
+        return address(this).balance; 
+
+    } 
+
+     
+
+    modifier ownerOnly() { 
+
+        require(msg.sender == owner); 
+
+        _; 
+
+    } 
+
+     
+
+     
+
+    //setter for scenario_close 
+
+    function setScenarioClose(bool _scenario_close) public{ 
+
+        scenario_close=_scenario_close; 
+
+    } 
+
+     
+
+     
+
+    // //Kevin.......check contract biddingResult ( listen close contract in  dapp) 
+
+    // function checkBiddingStatus() public { 
+
+    //     require(now>biddingclosetime || biddingComplete == true, "Bidding is still open"); 
+
+    //     emit contractClose("Bidding is close"); 
+
+    //     emit biddingResult(winningBidder, winningBid); 
+
+    // } 
+
+      
+
+    // //Kevin.....only winnerCarrier ,wholeseller and producer owner of  this bidding  contract 
+
+    // function getTrackingContractAddress() public requiredStakeholder view returns(address) { 
+
+    //     return  address(myTackingContract); 
+
+    // }  
+
+     
+
+    // //Kevin..... 
+
+    // modifier requiredStakeholder() { 
+
+    //     require( biddingComplete == true); 
+
+    //     require(msg.sender == owner && msg.sender ==winningBidder && msg.sender ==wholeseller ); 
+
+    //     _; 
+
+    // }            
+
+     
+
+} 
+
+ 
+
+ 
+
+ 
+
+ 
+
+pragma solidity >=0.4.22 <0.6.0;   
+
+import "./my_bidding_contract.sol"; 
+
+contract MyTrackingContract { 
+
+  
+
+  
+
+//use to verification of the tracking item 
+
+MyBiddingContract biddingcontract  ;   
+
+address admin; 
+
+  
+
+//should be static 
+
+uint[] contractLocation; // array containing latitude & longitude 
+
+uint contractLeadTime; // in seconds 
+
+uint contractPayment; // in tokens 
+
+  
+
+  
+
+  
+
+//Kevin....to pay carrier 
+
+uint carrierPayment ;    //in tokens 
+
+  
+
+  
+
+  
+
+mapping (string => Delivery) deliveries; 
+
+mapping (address => uint) balances; 
+
+  
+
+//Kevin....balance of carrier 
+
+mapping (address => uint) balancesToCarrier; 
+
+  
+
+  
+
+  
+
+struct Delivery { 
+
+    string item; 
+
+    uint quantity; 
+
+    uint[] locationData;          
+
+    uint timeStamp; 
+
+    address sender; 
+
+    } 
+
+// events to display messages after execution of certain transactions 
+
+event Success(string _message, string trackingNo, uint[] _locationData, uint _timeStamp, address _sender); 
+
+event Payment(string _message, address _from, address _to, uint _amount); 
+
+event Failure(string _message); 
+
+// initial token supply upon contract deployment 
+
+  
+
+  
+
+//constructor (uint _initialTokenSupply,uint _carrierToken ,address _biddingcontract) public { 
+
+            
+
+constructor (uint _initialTokenSupply,address _biddingcontract) public { 
+
+    
+
+   biddingcontract=MyBiddingContract(_biddingcontract); 
+
+   admin = msg.sender; 
+
+  
+
+    /* V */ 
+
+    balances[admin] = _initialTokenSupply; // Initially all tokens are held by admin 
+
+     
+
+} 
+
+  
+
+  
+
+  
+
+//not  
+
+  
+
+// send tokens from one account to another 
+
+function sendToken(address _from, address _to, uint _amount) public returns (bool success) { 
+
+     
+
+    //who has    the authorization to send token ? (this function ispublicly) 
+
+    if (balances[_from] < _amount) { 
+
+        emit Failure('Insufficient funds for payment'); 
+
+        return false; 
+
+    } 
+
+    balances[_from] -= _amount; 
+
+    balances[_to] += _amount; 
+
+    emit Payment('Payment sent', _from, _to, _amount); 
+
+    return true; 
+
+} 
+
+  
+
+// function sendTokenCarrier(address _from, address _to, uint _amount) public returns (bool success) { 
+
+     
+
+//     //who has    the authorization to send token ? (this function is      publicly) 
+
+     
+
+//     if (balancesToCarrier[_from] < _amount) { 
+
+//       emit Failure('Insufficient funds for payment'); 
+
+//         return false; 
+
+//         } 
+
+//     balancesToCarrier[_from] -= _amount; 
+
+//     balancesToCarrier[_to] += _amount; 
+
+//   emit Payment('Payment sent', _from, _to, _amount); 
+
+//     return true; 
+
+// } 
+
+  
+
+// show balance of an account 
+
+function getBalance(address _account) public  returns (uint _balance) { 
+
+    return balances[_account]; 
+
+} 
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+// set contract parameters for next leg of delivery (can only be done by admin) 
+
+function setContractParameters(uint[] memory _location, uint _leadTime, uint _produvcerPayment,uint _carrierPayment) public onlyAdmin returns (bool success) { 
+
+     
+
+    contractLocation = _location; // set next location that will receive delivery 
+
+    contractLeadTime = _leadTime; // set acceptable lead time for next leg of delivery 
+
+    contractPayment = _produvcerPayment; // set payment amount for completing next leg of delivery 
+
+    carrierPayment= _carrierPayment+ biddingcontract.winningBid(); 
+
+     
+
+     
+
+    return true; 
+
+} 
+
+  
+
+// input details of delivery to send 
+
+function deliveredProducts(string  memory trackingNo, string memory _item, uint  _quantity, uint[]  memory _locationData) public returns (bool success) { 
+
+     
+
+    //require sender is  Biddingwinner 
+
+    require(biddingcontract.winningBidder()==msg.sender &&   biddingcontract.biddingComplete()==true); 
+
+     
+
+    deliveries[trackingNo].item = _item; 
+
+    deliveries[trackingNo].quantity = _quantity; 
+
+    deliveries[trackingNo].locationData = _locationData; 
+
+    deliveries[trackingNo].timeStamp = block.timestamp; 
+
+    deliveries[trackingNo].sender = msg.sender; 
+
+    emit  Success('Item delivered', trackingNo, _locationData,block.timestamp, msg.sender); 
+
+    return true; 
+
+    } 
+
+     
+
+     
+
+// input details of received delivery 
+
+function receivedProducts (string memory trackingNo, string memory _item, uint _quantity, uint[] memory _locationData) public returns (bool success) { 
+
+  
+
+//ensure the wholeseller is relied to this biddingcontract 
+
+    require(biddingcontract.wholeseller()==msg.sender &&   biddingcontract.biddingComplete()==true); 
+
+  
+
+  
+
+// check that item and quantity received match item and quantity delivered 
+
+    if (keccak256(bytes  (deliveries[trackingNo].item)) == keccak256(bytes (_item)) && deliveries[trackingNo].quantity ==_quantity) { 
+
+       emit Success('Item received', trackingNo, _locationData, block.timestamp, msg.sender); 
+
+// execute payment if item received on time and location correct 
+
+        if (block.timestamp <= deliveries[trackingNo].timeStamp + contractLeadTime && _locationData[0] == contractLocation[0] && _locationData[1] == contractLocation[1]) { 
+
+  
+
+  
+
+  
+
+            //sendToken(deliveries[trackingNo].sender, admin, contractPayment); 
+
+           sendToken(msg.sender, admin, contractPayment); 
+
+            
+
+            } 
+
+        else { 
+
+          emit  Failure('Payment not triggered as criteria not met'); 
+
+            } 
+
+        return true; 
+
+    }                                                                                                                                                                                                                                                                                                                                                                                                        
+
+    else { 
+
+       emit Failure('Error in item/quantity'); 
+
+        return false; 
+
+        } 
+
+         
+
+         
+
+    biddingcontract.setScenarioClose(false);         
+
+} 
+
+     
+
+// remove details of delivery from database (can only be done by admin) 
+
+function deleteDelivery(string  memory trackingNo)   public onlyAdmin returns (bool success) { 
+
+    delete deliveries[trackingNo]; 
+
+    return true;             
+
+    } 
+
+     
+
+// display details of delivery 
+
+function checkDelivery(string memory trackingNo) public view returns (string memory, uint, uint[] memory, uint, address) { 
+
+    return (deliveries[trackingNo].item, deliveries[trackingNo].quantity, deliveries[trackingNo].locationData, deliveries[trackingNo].timeStamp, deliveries[trackingNo].sender); 
+
+    } 
+
+     
+
+// allow only admin to execute specific function using this modifier  
+
+modifier onlyAdmin() { 
+
+    if (msg.sender != admin) revert(); 
+
+    _; 
+
+    } 
+
+} 
+
+                                                                                                                                                                                  
