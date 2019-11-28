@@ -85,28 +85,16 @@ contract MyBiddingContract {
 
     //adding constructor to initialize state  
 
-    // constructor () public{ 
+    constructor () public{ 
 
-    //     owner=msg.sender; 
-
-    // } 
-    
-    
-        constructor(uint _initialTokenSupply,uint _biddingTime, address _beneficiary, string memory _city, uint _distance,address _wholeseller)  public { 
-
-        owner = _beneficiary; 
-        
-        biddingclosetime = now + _biddingTime; 
-
-        distance = _distance; 
-
-        city = _city; 
-
-        wholeseller=_wholeseller; 
-
-        initialTokenSupply=_initialTokenSupply; 
+        owner=msg.sender; 
 
     } 
+    
+    
+     
+
+      
 
 
          
@@ -153,21 +141,21 @@ contract MyBiddingContract {
 
     //not   secure 
 
-    // function Bidding(uint _initialTokenSupply,uint _biddingTime, address _beneficiary, string memory _city, uint _distance,address _wholeseller)  public { 
+    function Bidding(uint _initialTokenSupply,uint _biddingTime, address _beneficiary, string memory _city, uint _distance,address _wholeseller)  public { 
 
-    //     owner = _beneficiary; 
+        owner = _beneficiary; 
         
-    //     biddingclosetime = now + _biddingTime; 
+        biddingclosetime = now + _biddingTime; 
 
-    //     distance = _distance; 
+        distance = _distance; 
 
-    //     city = _city; 
+        city = _city; 
 
-    //     wholeseller=_wholeseller; 
+        wholeseller=_wholeseller; 
 
-    //     initialTokenSupply=_initialTokenSupply; 
+        initialTokenSupply=_initialTokenSupply; 
 
-    // } 
+    } 
 
      
 
