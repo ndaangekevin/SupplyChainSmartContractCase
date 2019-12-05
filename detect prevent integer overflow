@@ -1,0 +1,341 @@
+pragma solidity >=0.4.22 <0.6.0;   
+
+import "./my_bidding_contract.sol"; 
+
+contract MyTrackingContract { 
+
+//using to avoid over and under
+    uint256 constant UINT_MAX=2^256-1;
+     uint256 constant UINT_MIN=0;
+
+
+
+
+//use to verification of the tracking item 
+
+MyBiddingContract biddingcontract  ;   
+address public admin; 
+
+  
+
+//should be static 
+
+uint[] contractLocation; // array containing latitude & longitude 
+
+uint contractLeadTime; // in seconds 
+
+uint contractPayment; // in tokens 
+
+  
+
+  
+
+  
+
+//Kevin....to pay carrier 
+
+uint carrierPayment ;    //in tokens 
+
+  
+
+  
+
+  
+
+mapping (string => Delivery) deliveries; 
+
+mapping (address => uint) balances; 
+
+  
+
+//Kevin....balance of carrier 
+
+mapping (address => uint) balancesToCarrier; 
+
+  
+
+  
+
+  
+
+struct Delivery { 
+
+    string item; 
+
+    uint quantity; 
+
+    uint[] locationData;          
+
+    uint timeStamp; 
+
+    address sender; 
+
+    } 
+
+// events to display messages after execution of certain transactions 
+
+event Success(string _message, string trackingNo, uint[] _locationData, uint _timeStamp, address _sender); 
+
+event Payment(string _message, address _from, address _to, uint _amount); 
+
+event Failure(string _message); 
+
+// initial token supply upon contract deployment 
+
+  
+
+  
+
+//constructor (uint _initialTokenSupply,uint _carrierToken ,address _biddingcontract) public { 
+
+            
+
+constructor (uint _initialTokenSupply,address _biddingcontract) public { 
+
+   
+
+   biddingcontract=MyBiddingContract(_biddingcontract); 
+   admin =biddingcontract.owner() ; 
+   /* V */ 
+   balances[admin] = _initialTokenSupply; // Initially all tokens are held by admin 
+   
+   
+ 
+
+    
+     
+
+} 
+
+  
+
+
+
+
+// send tokens from one account to another 
+function sendToken(address _from, address _to, uint _amount) public returns (bool success) { 
+    //who has    the authorization to send token ? (this function ispublicly) 
+    uint val;
+
+
+    if (balances[_from] < _amount) { 
+
+        emit Failure('Insufficient funds for payment'); 
+
+        return false; 
+
+    } 
+
+    balances[_from] -= _amount; 
+
+
+    val=uintRangeCheck(balances[_to]+_amount);
+    balances[_to]=val;
+
+    emit Payment('Payment sent', _from, _to, _amount); 
+
+    return true; 
+
+
+    
+} 
+
+  
+
+
+
+  
+
+// show balance of an account 
+
+function getBalance(address _account) public view returns (uint _balance) { 
+
+    return balances[_account]; 
+
+} 
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+// set contract parameters for next leg of delivery (can only be done by admin) 
+
+function setContractParameters(uint[] memory _location, uint _leadTime, uint _produvcerPayment,uint _carrierPayment) public onlyAdmin returns (bool success) { 
+
+     
+ 
+     
+     
+     
+
+    contractLocation = _location; // set next location that will receive delivery 
+
+    contractLeadTime = _leadTime; // set acceptable lead time for next leg of delivery 
+
+    contractPayment = _produvcerPayment; // set payment amount for completing next leg of delivery 
+
+    carrierPayment= _carrierPayment+ biddingcontract.winningBid(); 
+
+     
+
+     
+
+    return true; 
+
+} 
+
+  
+
+// input details of delivery to send 
+
+function deliveredProducts(string  memory trackingNo, string memory _item, uint  _quantity, uint[]  memory _locationData) public returns (bool success) { 
+
+     
+
+    //require sender is  Biddingwinner 
+
+    require(biddingcontract.winningBidder()==msg.sender &&   biddingcontract.biddingComplete()==true); 
+
+     
+
+    deliveries[trackingNo].item = _item; 
+
+    deliveries[trackingNo].quantity = _quantity; 
+
+    deliveries[trackingNo].locationData = _locationData; 
+
+    deliveries[trackingNo].timeStamp = block.timestamp; 
+
+    deliveries[trackingNo].sender = msg.sender; 
+
+    emit  Success('Item delivered', trackingNo, _locationData,block.timestamp, msg.sender); 
+
+    return true; 
+
+    } 
+
+     
+
+     
+
+// input details of received delivery 
+
+function receivedProducts (string memory trackingNo, string memory _item, uint _quantity, uint[] memory _locationData) public returns (bool success) { 
+
+  
+
+//ensure the wholeseller is relied to this biddingcontract 
+
+    require(biddingcontract.wholeseller()==msg.sender &&   biddingcontract.biddingComplete()==true); 
+
+  
+
+  
+
+// check that item and quantity received match item and quantity delivered 
+
+    if (keccak256(bytes  (deliveries[trackingNo].item)) == keccak256(bytes (_item)) && deliveries[trackingNo].quantity ==_quantity) { 
+
+       emit Success('Item received', trackingNo, _locationData, block.timestamp, msg.sender); 
+
+// execute payment if item received on time and location correct 
+
+        if (block.timestamp <= deliveries[trackingNo].timeStamp + contractLeadTime && _locationData[0] == contractLocation[0] && _locationData[1] == contractLocation[1]) { 
+
+  
+
+  
+
+  
+
+            //sendToken(deliveries[trackingNo].sender, admin, contractPayment); 
+
+           sendToken(msg.sender, admin, contractPayment); 
+
+            
+
+            } 
+
+        else { 
+
+          emit  Failure('Payment not triggered as criteria not met'); 
+
+            } 
+
+        return true; 
+
+    }                                                                                                                                                                                                                                                                                                                                                                                                        
+
+    else { 
+
+       emit Failure('Error in item/quantity'); 
+
+        return false; 
+
+        } 
+
+    } 
+
+     
+
+// remove details of delivery from database (can only be done by admin) 
+
+function deleteDelivery(string  memory trackingNo)   public onlyAdmin returns (bool success) { 
+
+    delete deliveries[trackingNo]; 
+
+    return true;             
+
+    } 
+
+     
+
+// display details of delivery 
+
+function checkDelivery(string memory trackingNo) public view returns (string memory, uint, uint[] memory, uint, address) { 
+
+    return (deliveries[trackingNo].item, deliveries[trackingNo].quantity, deliveries[trackingNo].locationData, deliveries[trackingNo].timeStamp, deliveries[trackingNo].sender); 
+
+    } 
+
+     
+
+// allow only admin to execute specific function using this modifier  
+
+modifier onlyAdmin() { 
+
+    if (msg.sender != admin) revert(); 
+
+    _; 
+
+    } 
+    
+    
+    function initializeWholeSellerToken(uint _token) public{
+        
+        //
+        require(biddingcontract.wholeseller()==msg.sender &&   biddingcontract.biddingComplete()==true); 
+        balances[msg.sender]=_token;
+    }
+    
+    
+    
+    //adding function
+     function uintRangeCheck(uint value) private  pure  returns(uint b) {
+        if((value<UINT_MIN) || (value>UINT_MAX)){revert();}
+        return value;
+    }
+
+} 
+
+        
