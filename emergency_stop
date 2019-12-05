@@ -102,11 +102,11 @@ contract MyBiddingContract {
 
     //adding constructor to initialize state  
 
-    constructor () public{ 
+    // constructor () public{ 
 
-        owner=msg.sender; 
+    //     owner=msg.sender; 
 
-    } 
+    // } 
     
     
      
@@ -118,7 +118,7 @@ contract MyBiddingContract {
 
          
 
-    function authorize(address party, uint _reputationfactor) ownerOnly public { 
+    function authorize(address party, uint _reputationfactor) public { 
 
         carriers[party].authorized = true; 
 
