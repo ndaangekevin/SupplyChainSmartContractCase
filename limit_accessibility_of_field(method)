@@ -1,20 +1,14 @@
+
+  
 pragma solidity >=0.4.22 <0.6.0;   
 
 import "./my_tracking_contract.sol"; 
+contract MyBiddingContract { 
 
   
 
-contract MyBiddingContract { 
-
-     
-
-     
-
     //contract balance 
-
     uint public contractbalance; 
-
-     
 
     //bidding parameters.  
 
@@ -59,7 +53,6 @@ contract MyBiddingContract {
     struct Carrier {                 
 
          
-
         bool authorized; 
 
         bool bidded; 
@@ -86,6 +79,7 @@ contract MyBiddingContract {
 
      
 
+     
     //adding constructor to initialize state  
 
     constructor () public{ 
@@ -94,11 +88,14 @@ contract MyBiddingContract {
 
     } 
 
-         
+      
+
 
          
 
-    function authorize(address party, uint _reputationfactor) ownerOnly public { 
+         
+
+    function authorize(address party, uint _reputationfactor) public ownerOnly { 
 
         carriers[party].authorized = true; 
 
@@ -136,12 +133,13 @@ contract MyBiddingContract {
 
                     
 
-    //not   secure 
+    //secure now( prevent resetting of initialized state of the current bidding contract) 
 
     function Bidding(uint _initialTokenSupply,uint _biddingTime, address _beneficiary, string memory _city, uint _distance,address _wholeseller)  public ownerOnly  { 
 
+       
         owner = _beneficiary; 
-
+        
         biddingclosetime = now + _biddingTime; 
 
         distance = _distance; 
@@ -154,6 +152,7 @@ contract MyBiddingContract {
 
     } 
 
+
      
 
     // Bidding is possible with the value sent along with this transaction 
@@ -163,7 +162,7 @@ contract MyBiddingContract {
     function bid(uint qualitylevel) public payable { 
 
         // The keyword payable is required so the function receives Ether. 
-
+        
          if(now>biddingclosetime || biddingComplete == true){ 
 
         emit contractClose("Bidding is close"); 
@@ -344,26 +343,27 @@ contract MyBiddingContract {
 
     // //Kevin.....only winnerCarrier ,wholeseller and producer owner of  this bidding  contract 
 
-    // function getTrackingContractAddress() public requiredStakeholder view returns(address) { 
+    function getTrackingContractAddress() public requiredStakeholder view returns(address) { 
 
-    //     return  address(myTackingContract); 
+        return  address(myTackingContract); 
 
-    // }  
-
-     
-
-    // //Kevin..... 
-
-    // modifier requiredStakeholder() { 
-
-    //     require( biddingComplete == true); 
-
-    //     require(msg.sender == owner && msg.sender ==winningBidder && msg.sender ==wholeseller ); 
-
-    //     _; 
-
-    // }            
+    }  
 
      
 
-} 
+    //Kevin..... 
+
+    modifier requiredStakeholder() { 
+
+        require( biddingComplete == true); 
+
+        require(msg.sender == owner && msg.sender ==winningBidder && msg.sender ==wholeseller ); 
+
+        _; 
+
+    }            
+
+    ////////////////////////////////////////////////////////////////////////////////////////// end
+    
+
+}
