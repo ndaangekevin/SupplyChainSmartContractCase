@@ -4,18 +4,17 @@ import "./my_bidding_contract.sol";
 
 contract MyTrackingContract { 
 
-  
-  
+///////////////////////////////syart
+
+
+
  // to check the total total_initialization of the tracking related to the bidding contract instance 
  bool total_initialization ;
   
-  
-
 
 //use to verification of the tracking item 
 
 MyBiddingContract biddingcontract  ;   
-
 address public admin; 
 
   
@@ -115,11 +114,10 @@ constructor (uint _initialTokenSupply,address _biddingcontract) public {
 
 
 // send tokens from one account to another 
-
 function sendToken(address _from, address _to, uint _amount) public returns (bool success) { 
-
-     
     //who has    the authorization to send token ? (this function ispublicly) 
+
+
 
     if (balances[_from] < _amount) { 
 
@@ -174,7 +172,10 @@ function getBalance(address _account) public  returns (uint _balance) {
 function setContractParameters(uint[] memory _location, uint _leadTime, uint _produvcerPayment,uint _carrierPayment) public onlyAdmin returns (bool success) { 
 
      
-     require(total_initialization==true);
+ 
+     
+     
+  require(total_initialization==true);
      
      
      
@@ -192,7 +193,6 @@ function setContractParameters(uint[] memory _location, uint _leadTime, uint _pr
      
 
     return true; 
-
 } 
 
   
@@ -320,6 +320,17 @@ modifier onlyAdmin() {
     _; 
 
     } 
+    
+    
+    function initializeWholeSellerToken(uint _token) public{
+        
+        //
+        require(biddingcontract.wholeseller()==msg.sender &&   biddingcontract.biddingComplete()==true); 
+        balances[msg.sender]=_token;
+    }
+    
+    
+    
 
 } 
 
