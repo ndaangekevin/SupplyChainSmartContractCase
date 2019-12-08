@@ -1,32 +1,31 @@
+
+  
 pragma solidity >=0.4.22 <0.6.0;   
 
 import "./my_tracking_contract.sol"; 
 contract MyBiddingContract { 
 
-    //
-    
-    bool isStopped = false;
+  
+  
+  
+  
+  //////////////////////////////////////start
+  
+   bool isStopped = false;
 
     modifier stoppedInEmergency {
         require(!isStopped);
         _;
     }
 
-    // modifier onlyWhenStopped {
-    //     require(isStopped);
-    //     _;
-    // }
-
-    // modifier onlyAuthorized {
-    //     // Check for authorization of msg.sender here
-    //     _;
-    // }
+  
 
     function stopContract() public ownerOnly {
         isStopped = true;
     }
 
-     
+  
+  
 
     //contract balance 
     uint public contractbalance; 
@@ -100,15 +99,6 @@ contract MyBiddingContract {
 
      
 
-    //adding constructor to initialize state  
-
-    // constructor () public{ 
-
-    //     owner=msg.sender; 
-
-    // } 
-    
-    
      
 
       
@@ -118,7 +108,7 @@ contract MyBiddingContract {
 
          
 
-    function authorize(address party, uint _reputationfactor) public { 
+    function authorize(address party, uint _reputationfactor) public ownerOnly { 
 
         carriers[party].authorized = true; 
 
@@ -180,7 +170,7 @@ contract MyBiddingContract {
 
     // Bid value is  refunded if the bidding is not won 
 
-    function bid(uint qualitylevel) public payable stoppedInEmergency { 
+      function bid(uint qualitylevel) public payable stoppedInEmergency { 
 
         // The keyword payable is required so the function receives Ether. 
         
@@ -244,7 +234,7 @@ contract MyBiddingContract {
 
 } 
 
-    } 
+    }
 
     // To withdraw a non-winning   
 
@@ -384,6 +374,7 @@ contract MyBiddingContract {
 
     }            
 
-     
+    ////////////////////////////////////////////////////////////////////////////////////////// end
+    
 
-} 
+}
