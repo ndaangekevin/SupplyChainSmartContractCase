@@ -1,28 +1,18 @@
+
+  
 pragma solidity >=0.4.22 <0.6.0;   
 
 import "./my_tracking_contract.sol"; 
-
-  
-
 contract MyBiddingContract { 
 
-     
-
-     
-
-    // 
+  
+     // 
 
     bool scenario_close; 
-
-     
-
-     
+  
 
     //contract balance 
-
     uint public contractbalance; 
-
-     
 
     //bidding parameters.  
 
@@ -67,7 +57,6 @@ contract MyBiddingContract {
     struct Carrier {                 
 
          
-
         bool authorized; 
 
         bool bidded; 
@@ -92,23 +81,24 @@ contract MyBiddingContract {
 
      
 
-     
-
-    //adding constructor to initialize state  
-
-    constructor () public{ 
+//adding overriding constructor to initialse scenario_close     
+ constructor () public{ 
 
          
 
         scenario_close=false; 
 
-    } 
+    }
+     
+
+      
+
 
          
 
          
 
-    function authorize(address party, uint _reputationfactor) ownerOnly public { 
+    function authorize(address party, uint _reputationfactor) public ownerOnly { 
 
         carriers[party].authorized = true; 
 
@@ -145,11 +135,7 @@ contract MyBiddingContract {
      
 
                     
-
-    
-
-    //not   secure 
-
+    // set the scenario close to true after initializing the bidding 
     function Bidding(uint _initialTokenSupply,uint _biddingTime, address _beneficiary, string memory _city, uint _distance,address _wholeseller)  public { 
 
          
@@ -185,7 +171,7 @@ contract MyBiddingContract {
     function bid(uint qualitylevel) public payable { 
 
         // The keyword payable is required so the function receives Ether. 
-
+        
          if(now>biddingclosetime || biddingComplete == true){ 
 
         emit contractClose("Bidding is close"); 
@@ -226,13 +212,11 @@ contract MyBiddingContract {
 
         } 
 
-        
-
-        
-
        winningBidder = msg.sender; 
 
        winningBid = msg.value-1; 
+
+        
 
        //fee  for after bidding 
 
@@ -352,18 +336,6 @@ contract MyBiddingContract {
 
      
 
-    //setter for scenario_close 
-
-    function setScenarioClose(bool _scenario_close) public{ 
-
-        scenario_close=_scenario_close; 
-
-    } 
-
-     
-
-     
-
     // //Kevin.......check contract biddingResult ( listen close contract in  dapp) 
 
     // function checkBiddingStatus() public { 
@@ -380,37 +352,40 @@ contract MyBiddingContract {
 
     // //Kevin.....only winnerCarrier ,wholeseller and producer owner of  this bidding  contract 
 
-    // function getTrackingContractAddress() public requiredStakeholder view returns(address) { 
+    function getTrackingContractAddress() public requiredStakeholder view returns(address) { 
 
-    //     return  address(myTackingContract); 
+        return  address(myTackingContract); 
 
-    // }  
-
-     
-
-    // //Kevin..... 
-
-    // modifier requiredStakeholder() { 
-
-    //     require( biddingComplete == true); 
-
-    //     require(msg.sender == owner && msg.sender ==winningBidder && msg.sender ==wholeseller ); 
-
-    //     _; 
-
-    // }            
+    }  
 
      
 
-} 
+    //Kevin..... 
 
- 
+    modifier requiredStakeholder() { 
 
- 
+        require( biddingComplete == true); 
 
- 
+        require(msg.sender == owner && msg.sender ==winningBidder && msg.sender ==wholeseller ); 
 
- 
+        _; 
+
+    }    
+    
+    
+    
+      function setScenarioClose(bool _scenario_close) public{ 
+
+        scenario_close=_scenario_close; 
+
+    }
+
+
+    
+
+}
+
+
 
 pragma solidity >=0.4.22 <0.6.0;   
 
@@ -418,15 +393,11 @@ import "./my_bidding_contract.sol";
 
 contract MyTrackingContract { 
 
-  
-
-  
 
 //use to verification of the tracking item 
 
 MyBiddingContract biddingcontract  ;   
-
-address admin; 
+address public admin; 
 
   
 
@@ -504,39 +475,26 @@ event Failure(string _message);
 
 constructor (uint _initialTokenSupply,address _biddingcontract) public { 
 
-    
 
    biddingcontract=MyBiddingContract(_biddingcontract); 
+   admin =biddingcontract.owner() ; 
+   /* V */ 
+   balances[admin] = _initialTokenSupply; // Initially all tokens are held by admin 
+   
 
-   admin = msg.sender; 
-
-  
-
-    /* V */ 
-
-    balances[admin] = _initialTokenSupply; // Initially all tokens are held by admin 
-
-     
 
 } 
 
   
 
-  
 
-  
 
-//not  
-
-  
 
 // send tokens from one account to another 
-
 function sendToken(address _from, address _to, uint _amount) public returns (bool success) { 
-
-     
-
     //who has    the authorization to send token ? (this function ispublicly) 
+
+
 
     if (balances[_from] < _amount) { 
 
@@ -554,35 +512,13 @@ function sendToken(address _from, address _to, uint _amount) public returns (boo
 
     return true; 
 
+
+    
 } 
 
   
 
-// function sendTokenCarrier(address _from, address _to, uint _amount) public returns (bool success) { 
 
-     
-
-//     //who has    the authorization to send token ? (this function is      publicly) 
-
-     
-
-//     if (balancesToCarrier[_from] < _amount) { 
-
-//       emit Failure('Insufficient funds for payment'); 
-
-//         return false; 
-
-//         } 
-
-//     balancesToCarrier[_from] -= _amount; 
-
-//     balancesToCarrier[_to] += _amount; 
-
-//   emit Payment('Payment sent', _from, _to, _amount); 
-
-//     return true; 
-
-// } 
 
   
 
@@ -612,6 +548,10 @@ function getBalance(address _account) public  returns (uint _balance) {
 
 function setContractParameters(uint[] memory _location, uint _leadTime, uint _produvcerPayment,uint _carrierPayment) public onlyAdmin returns (bool success) { 
 
+     
+ 
+     
+     
      
 
     contractLocation = _location; // set next location that will receive delivery 
@@ -707,6 +647,8 @@ function receivedProducts (string memory trackingNo, string memory _item, uint _
           emit  Failure('Payment not triggered as criteria not met'); 
 
             } 
+            
+        biddingcontract.setScenarioClose(false);          
 
         return true; 
 
@@ -715,18 +657,17 @@ function receivedProducts (string memory trackingNo, string memory _item, uint _
     else { 
 
        emit Failure('Error in item/quantity'); 
+       biddingcontract.setScenarioClose(false);      
 
         return false; 
 
         } 
+        
+        
+        
+        
 
-         
-
-         
-
-    biddingcontract.setScenarioClose(false);         
-
-} 
+    } 
 
      
 
@@ -761,7 +702,24 @@ modifier onlyAdmin() {
     _; 
 
     } 
+    
+    
+    function initializeWholeSellerToken(uint _token) public{
+        
+        //
+        require(biddingcontract.wholeseller()==msg.sender &&   biddingcontract.biddingComplete()==true); 
+        balances[msg.sender]=_token;
+    }
+    
+    
+    
+
+    
 
 } 
 
-                                                                                                                                                                                  
+        
+
+
+
+
