@@ -1,11 +1,12 @@
+
+  
 pragma solidity >=0.4.22 <0.6.0;   
 
 import "./my_tracking_contract.sol"; 
 contract MyBiddingContract { 
 
-    //
-    
-  bool locked;
+  //////////////////////////////////start
+    bool locked;
   
   
   modifier noReentrancy() {
@@ -16,6 +17,8 @@ contract MyBiddingContract {
  }
 
      
+  
+  
 
     //contract balance 
     uint public contractbalance; 
@@ -89,10 +92,16 @@ contract MyBiddingContract {
 
      
 
-    //adding constructor to initialize state  
+     
+
+      
 
 
-    function authorize(address party, uint _reputationfactor) public { 
+         
+
+         
+
+    function authorize(address party, uint _reputationfactor) public ownerOnly { 
 
         carriers[party].authorized = true; 
 
@@ -143,7 +152,7 @@ contract MyBiddingContract {
         city = _city; 
 
         wholeseller=_wholeseller; 
-        
+
         initialTokenSupply=_initialTokenSupply; 
 
     } 
@@ -260,7 +269,7 @@ contract MyBiddingContract {
 
     //When bidding ends, winning bid is sent to the beneficiary 
 
-    function biddingClose() public noReentrancy { 
+      function biddingClose() public noReentrancy { 
 
          
 
@@ -297,6 +306,7 @@ contract MyBiddingContract {
         // owner.transfer(winningBid); 
 
     }        
+
 
   
 
@@ -358,6 +368,7 @@ contract MyBiddingContract {
 
     }            
 
-     
+    ////////////////////////////////////////////////////////////////////////////////////////// end
+    
 
-} 
+}
