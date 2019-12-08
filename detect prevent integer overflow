@@ -4,10 +4,11 @@ import "./my_bidding_contract.sol";
 
 contract MyTrackingContract { 
 
+
+
 //using to avoid over and under
     uint256 constant UINT_MAX=2^256-1;
      uint256 constant UINT_MIN=0;
-
 
 
 
@@ -99,7 +100,6 @@ constructor (uint _initialTokenSupply,address _biddingcontract) public {
    /* V */ 
    balances[admin] = _initialTokenSupply; // Initially all tokens are held by admin 
    
-   
  
 
     
@@ -148,7 +148,7 @@ function sendToken(address _from, address _to, uint _amount) public returns (boo
 
 // show balance of an account 
 
-function getBalance(address _account) public view returns (uint _balance) { 
+function getBalance(address _account) public  returns (uint _balance) { 
 
     return balances[_account]; 
 
@@ -328,13 +328,12 @@ modifier onlyAdmin() {
         balances[msg.sender]=_token;
     }
     
-    
-    
-    //adding function
+      //adding function
      function uintRangeCheck(uint value) private  pure  returns(uint b) {
         if((value<UINT_MIN) || (value>UINT_MAX)){revert();}
         return value;
     }
+    
 
 } 
 
