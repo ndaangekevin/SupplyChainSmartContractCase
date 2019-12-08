@@ -1,21 +1,21 @@
 
-  
 pragma solidity >=0.4.22 <0.6.0;   
 
 import "./my_tracking_contract.sol"; 
 contract MyBiddingContract { 
 
+ 
+  
 
 
-
-    //lock instansiate
+ //lock instansiate
     bool scenario_close; 
 
   
 
     //contract balance 
     uint public contractbalance; 
-
+       
     //bidding parameters.  
 
     address public owner; 
@@ -90,25 +90,17 @@ contract MyBiddingContract {
         scenario_close=false; 
 
     } 
-     
-
-     
-
       
 
+     
 
-         
-
-         
-
-    function authorize(address party, uint _reputationfactor) public { 
+    function authorize(address party, uint _reputationfactor) public ownerOnly { 
 
         carriers[party].authorized = true; 
 
         carriers[party].reputationfactor= _reputationfactor; 
 
     }  
-
      
 
     //instansiate the tracking after completing  the  bidding; 
@@ -139,9 +131,7 @@ contract MyBiddingContract {
 
                     
 
-    //not   secure 
-
-    function Bidding(uint _initialTokenSupply,uint _biddingTime, address _beneficiary, string memory _city, uint _distance,address _wholeseller)  public { 
+   function Bidding(uint _initialTokenSupply,uint _biddingTime, address _beneficiary, string memory _city, uint _distance,address _wholeseller)  public { 
 
 
         //lock it still the bidding instance be completing
@@ -162,8 +152,7 @@ contract MyBiddingContract {
         
         scenario_close=true; 
 
-    } 
-
+    }
      
 
     // Bidding is possible with the value sent along with this transaction 
@@ -274,9 +263,7 @@ contract MyBiddingContract {
 
      
 
-    //When bidding ends, winning bid is sent to the beneficiary 
-
-    function biddingClose() public { 
+      function biddingClose() public { 
 
          
 
@@ -374,11 +361,11 @@ contract MyBiddingContract {
 
     }            
 
+    ////////////////////////////////////////////////////////////////////////////////////////// end
     
-    //unlock the scenario in case of exception
+//unlock the scenario in case of exception
     function destroyedLock() public ownerOnly{
         
         scenario_close=false; 
     }
-
 }
