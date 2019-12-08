@@ -1,18 +1,16 @@
+
+  
 pragma solidity >=0.4.22 <0.6.0;   
 
 import "./my_tracking_contract.sol"; 
-
-  
-
 contract MyBiddingContract { 
 
-     
-
-     
+  
+    
+  
 
     //contract balance 
     uint public contractbalance; 
-
 
     //bidding parameters.  
 
@@ -82,6 +80,7 @@ contract MyBiddingContract {
      
 
      
+     
 
     //adding constructor to initialize state  
 
@@ -90,8 +89,6 @@ contract MyBiddingContract {
         owner=msg.sender; 
 
     } 
-    
-    
      
 
       
@@ -101,7 +98,7 @@ contract MyBiddingContract {
 
          
 
-    function authorize(address party, uint _reputationfactor) ownerOnly public { 
+    function authorize(address party, uint _reputationfactor) public ownerOnly { 
 
         carriers[party].authorized = true; 
 
@@ -115,6 +112,8 @@ contract MyBiddingContract {
 
     MyTrackingContract public  myTackingContract; 
 
+     
+     
      
 
      
@@ -139,7 +138,7 @@ contract MyBiddingContract {
 
                     
 
-    //not   secure 
+   
 
     function Bidding(uint _initialTokenSupply,uint _biddingTime, address _beneficiary, string memory _city, uint _distance,address _wholeseller)  public { 
 
@@ -367,6 +366,7 @@ contract MyBiddingContract {
 
     }            
 
-     
+    ////////////////////////////////////////////////////////////////////////////////////////// end
+    
 
-} 
+}
