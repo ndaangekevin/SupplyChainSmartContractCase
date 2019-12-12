@@ -172,7 +172,7 @@ function getBalance(address _account) public  returns (uint _balance) {
 
 function setContractParameters(uint[] memory _location, uint _leadTime, uint _produvcerPayment,uint _carrierPayment) public onlyAdmin returns (bool success) { 
 
-     
+      uint val;
  
      
      
@@ -184,7 +184,10 @@ function setContractParameters(uint[] memory _location, uint _leadTime, uint _pr
 
     contractPayment = _produvcerPayment; // set payment amount for completing next leg of delivery 
 
-    carrierPayment= _carrierPayment+ biddingcontract.winningBid(); 
+
+
+    val= uintRangeCheck(_carrierPayment+biddingcontract.winningBid());
+    carrierPayment=val; 
 
      
 
@@ -336,5 +339,3 @@ modifier onlyAdmin() {
     
 
 } 
-
-        
