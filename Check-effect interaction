@@ -232,8 +232,9 @@ contract MyBiddingContract {
 
         if (bidAmount > 0) { 
 
-            returnsPending[msg.sender] = 0; 
-            msg.sender.send(bidAmount);
+            returnsPending[msg.sender] = 0;
+            msg.sender.transfer(bidAmount);
+           
             
 
         } 
